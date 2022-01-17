@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, View, Dimensions,TouchableOpacity, TextInput } from 'react-native';
+import { StyleSheet, Text, View, Dimensions,TouchableOpacity, TextInput, useWindowDimensions } from 'react-native';
 import EStyleSheet from 'react-native-extended-stylesheet';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialIcons, Feather, FontAwesome5 } from '@expo/vector-icons'; 
@@ -26,8 +26,11 @@ let shadow = {
 }
 
 export default function HomeScreen() {
+
+    let height = useWindowDimensions().height;
+
   return (
-    <View style={{flex:1,backgroundColor:"#f4f5f9"}}>
+    <View style={{flex:1,backgroundColor:"#f4f5f9",minHeight:height+EStyleSheet.value("30rem")}}>
         <LinearGradient 
          colors={['#ef3136', '#ffb040']}
          end={{ x: 1, y: 0.6 }}
