@@ -4,6 +4,7 @@ import EStyleSheet from 'react-native-extended-stylesheet';
 
 import HomeScreen from './screen/HomeScreen';
 import TranslateScreen from './screen/TranslateScreen';
+import ConversationScreen from './screen/ConversationScreen';
 
 import { useFonts } from 'expo-font';
 
@@ -23,7 +24,7 @@ export default function App() {
   }
 
   return (
-   <TranslateScreen/>
+   <ConversationScreen/>
   );
 }
 
