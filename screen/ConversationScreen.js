@@ -1,8 +1,8 @@
-import React, {useState, useRef} from 'react';
-import { StyleSheet, Text, View, Dimensions,TouchableOpacity, TextInput, Pressable, useWindowDimensions, ScrollView } from 'react-native';
+import React, {useState, useRef, useEffect} from 'react';
+import { StyleSheet, Text, View, Dimensions,TouchableOpacity, TextInput, BackHandler, Pressable, useWindowDimensions, ScrollView, ActivityIndicator } from 'react-native';
 import EStyleSheet from 'react-native-extended-stylesheet';
 import { LinearGradient } from 'expo-linear-gradient';
-import { MaterialIcons, Feather, FontAwesome5 } from '@expo/vector-icons'; 
+import { MaterialIcons, Feather, FontAwesome5, AntDesign } from '@expo/vector-icons'; 
 
 import { StatusBarHeight } from '../utils/HeightUtils';
 
@@ -26,7 +26,7 @@ let shadow = {
     elevation: 2,
 }
 
-export default function ConversationScreen() {
+export default function ConversationScreen(props) {
 
     let [offset,setOffset] = useState(0);
     
@@ -35,9 +35,13 @@ export default function ConversationScreen() {
     let [capturedOffset, setCapturedOffset] = useState({});
 
     let [selectedConversation, setSelectedConversation] = useState(0);
-    let [conversationStep, setConversationStep] = useState(1);
+    let [conversationStep, setConversationStep] = useState(0);
+
+    let [translateBoxOpened, setTranslateBoxOpened] = useState(true);
 
     let [selectedSubConversation, setSelectedSubConversation] = useState(0);
+
+    let [placeholderText, setPlaceholderText] = useState("Bisakah saya mendapatkan tanda terimaaa?");
 
     let [conversation, setConversation] = useState([
     {
@@ -102,35 +106,588 @@ export default function ConversationScreen() {
         ]
     },
     {
-        name:"Airport"
+        name:"Airport",
+           categories:[
+            {
+                name:"All",
+                content:[
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                ]
+            },
+            {
+                name:"Check In/Out",
+                content:[
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                ]
+            },
+            {
+                name:"Hotel",
+                content:[
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                ]
+            },
+            {
+                name:"Public Spaces",
+                content:[
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                ]
+            },
+        ]
     },
     {
-        name:"In Flight"
+        name:"In Flight",
+           categories:[
+            {
+                name:"All",
+                content:[
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                ]
+            },
+            {
+                name:"Check In/Out",
+                content:[
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                ]
+            },
+            {
+                name:"Hotel",
+                content:[
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                ]
+            },
+            {
+                name:"Public Spaces",
+                content:[
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                ]
+            },
+        ]
     },
     {
-        name:"Restaurant"
+        name:"Restaurant",
+           categories:[
+            {
+                name:"All",
+                content:[
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                ]
+            },
+            {
+                name:"Check In/Out",
+                content:[
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                ]
+            },
+            {
+                name:"Hotel",
+                content:[
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                ]
+            },
+            {
+                name:"Public Spaces",
+                content:[
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                ]
+            },
+        ]
     },
     {
-        name:"Accomodation"
+        name:"Accomodation",
+           categories:[
+            {
+                name:"All",
+                content:[
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                ]
+            },
+            {
+                name:"Check In/Out",
+                content:[
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                ]
+            },
+            {
+                name:"Hotel",
+                content:[
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                ]
+            },
+            {
+                name:"Public Spaces",
+                content:[
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                ]
+            },
+        ]
     },
     {
-        name:"Transportation"
+        name:"Transportation",
+           categories:[
+            {
+                name:"All",
+                content:[
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                ]
+            },
+            {
+                name:"Check In/Out",
+                content:[
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                ]
+            },
+            {
+                name:"Hotel",
+                content:[
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                ]
+            },
+            {
+                name:"Public Spaces",
+                content:[
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                ]
+            },
+        ]
     },
     {
-        name:"Shopping"
+        name:"Shopping",
+           categories:[
+            {
+                name:"All",
+                content:[
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                ]
+            },
+            {
+                name:"Check In/Out",
+                content:[
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                ]
+            },
+            {
+                name:"Hotel",
+                content:[
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                ]
+            },
+            {
+                name:"Public Spaces",
+                content:[
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                ]
+            },
+        ]
     },
     {
-        name:"Tourism"
+        name:"Tourism",
+           categories:[
+            {
+                name:"All",
+                content:[
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                ]
+            },
+            {
+                name:"Check In/Out",
+                content:[
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                ]
+            },
+            {
+                name:"Hotel",
+                content:[
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                ]
+            },
+            {
+                name:"Public Spaces",
+                content:[
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                ]
+            },
+        ]
     },
     {
-        name:"Emergency"
+        name:"Emergency",
+           categories:[
+            {
+                name:"All",
+                content:[
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                ]
+            },
+            {
+                name:"Check In/Out",
+                content:[
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                ]
+            },
+            {
+                name:"Hotel",
+                content:[
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                ]
+            },
+            {
+                name:"Public Spaces",
+                content:[
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                ]
+            },
+        ]
     },
     {
-        name:"Favorites"
+        name:"Favorites",
+           categories:[
+            {
+                name:"All",
+                content:[
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                ]
+            },
+            {
+                name:"Check In/Out",
+                content:[
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                ]
+            },
+            {
+                name:"Hotel",
+                content:[
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                ]
+            },
+            {
+                name:"Public Spaces",
+                content:[
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                    "Could I get A Receipt, Please?",
+                    "I'd Like To Leave One Night Earlier",
+                    "Can I Stay Another Night?",
+                ]
+            },
+        ]
     } 
     ]);
 
     let height = useWindowDimensions().height;
+
+    let [selectedCategory,setSelectedCategory] = useState(-1);
+    let [selectedBox, setSelectedBox] = useState(-1);
+
+    let [boxLoading, setBoxLoading] = useState(true);
+
+    useEffect(() => {
+        const backAction = () => {
+          if(selectedCategory!==-1 && selectedBox!==-1){
+            setSelectedCategory(-1);
+            setSelectedBox(-1);
+            return true;
+          }
+          else if(conversationStep===1){
+              setConversationStep(0);
+              return true;
+          }
+          else{
+              props.navigation.goBack();
+              return true;
+          }
+         
+        };
+    
+        const backHandler = BackHandler.addEventListener(
+          "hardwareBackPress",
+          backAction
+        );
+    
+        return () => backHandler.remove();
+      }, [conversationStep,selectedCategory,selectedBox]);
    
     if(conversationStep===0){
 
@@ -178,9 +735,15 @@ export default function ConversationScreen() {
                             {
                                 conversation.map((item,index)=>{
                                     return (
-                                        <View key={`conversation-category-${index}`} style={{...shadow,marginBottom:EStyleSheet.value("15rem"),backgroundColor:"white",borderRadius:EStyleSheet.value("5rem"),paddingVertical:EStyleSheet.value("15rem"),paddingHorizontal:EStyleSheet.value("20rem"),marginHorizontal:EStyleSheet.value("20rem")}}>
+                                        <TouchableOpacity 
+                                        activeOpacity={0.8}
+                                        onPress={()=>{
+                                            setSelectedConversation(index);
+                                            setConversationStep(1);
+                                        }}
+                                        key={`conversation-category-${index}`} style={{...shadow,marginBottom:EStyleSheet.value("15rem"),backgroundColor:"white",borderRadius:EStyleSheet.value("5rem"),paddingVertical:EStyleSheet.value("15rem"),paddingHorizontal:EStyleSheet.value("20rem"),marginHorizontal:EStyleSheet.value("20rem")}}>
                                             <Text style={{fontSize:EStyleSheet.value("18rem")}}>{item.name}</Text>
-                                        </View>
+                                        </TouchableOpacity>
                                     )
                                 })
                             }
@@ -335,10 +898,57 @@ export default function ConversationScreen() {
                                         </View>
                                         {
                                             item.content.map((content,contentindex)=>{
+                                                if(index===selectedCategory && contentindex===selectedBox){
+                                                    return (
+                                                        <View style={{...shadow,height:EStyleSheet.value("200rem"),marginBottom:EStyleSheet.value("15rem"),backgroundColor:"white",borderRadius:EStyleSheet.value("5rem"),paddingVertical:EStyleSheet.value("15rem"),paddingHorizontal:EStyleSheet.value("20rem"),marginHorizontal:EStyleSheet.value("20rem")}}>
+                                                            
+                                                            {
+                                                                (boxLoading) &&
+                                                                <View style={{position:"absolute",justifyContent:"center",alignItems:"center",overflow:"hidden",borderRadius:EStyleSheet.value("5rem"),width:Dimensions.get("screen").width-EStyleSheet.value("40rem"),height:EStyleSheet.value("200rem"),zIndex:100}}>
+                                                                    <View style={{backgroundColor:"#ef3136",position:"absolute",width:"100%",height:"100%",opacity:0.4}}></View>
+                                                                    <ActivityIndicator size="large" color="white"/>
+                                                                </View>
+                                                            }
+
+                                                            <Text style={{color:"#868889",fontSize:EStyleSheet.value("15rem")}}>{content}</Text>
+                                                            <View style={{flex:1,paddingVertical:EStyleSheet.value("5rem")}}>
+                                                                <ScrollView>
+                                                                <Text style={{fontSize:EStyleSheet.value("23rem")}}>{placeholderText}</Text>
+                                                                </ScrollView>
+                                                            </View>
+                                                            <View style={{flexDirection:"row",alignItems:"center",justifyContent:"space-between"}}>
+                                                                <LinearGradient 
+                                                                 colors={['#ef3136', '#ffb040']}
+                                                                 end={{ x: 1, y: 0.6 }}
+                                                                style={{width:EStyleSheet.value("40rem"),justifyContent:"center",alignItems:"center",backgroundColor:"red",borderRadius:999,height:EStyleSheet.value("40rem")}}>
+                                                                    <AntDesign name="sound" size={EStyleSheet.value("18rem")} color="white" />
+                                                                </LinearGradient>
+                                                                <View style={{flexDirection:"row"}}>
+                                                                    <Feather name="copy" size={EStyleSheet.value("18rem")} color="black" />
+                                                                    <AntDesign style={{marginLeft:EStyleSheet.value("10rem")}} name="sharealt" size={EStyleSheet.value("18rem")} color="black" />
+                                                                </View>
+                                                            </View>
+                                                        </View>
+                                                    )
+                                                }
                                                 return (
-                                                    <View style={{...shadow,marginBottom:EStyleSheet.value("15rem"),backgroundColor:"white",borderRadius:EStyleSheet.value("5rem"),paddingVertical:EStyleSheet.value("15rem"),paddingHorizontal:EStyleSheet.value("20rem"),marginHorizontal:EStyleSheet.value("20rem")}}>
+                                                    <TouchableOpacity 
+                                                    activeOpacity={0.8}
+                                                    onPress={async ()=>{
+                                                        setBoxLoading(true);
+
+                                                        setPlaceholderText("");
+                                                        setSelectedCategory(index);
+                                                        setSelectedBox(contentindex);
+                                                        
+                                                        setTimeout(() => {
+                                                            setBoxLoading(false);
+                                                            setPlaceholderText("Bisakah saya mendapatkan tanda terima?")
+                                                        }, 1000);
+                                                    }}
+                                                    style={{...shadow,marginBottom:EStyleSheet.value("15rem"),backgroundColor:"white",borderRadius:EStyleSheet.value("5rem"),paddingVertical:EStyleSheet.value("15rem"),paddingHorizontal:EStyleSheet.value("20rem"),marginHorizontal:EStyleSheet.value("20rem")}}>
                                                         <Text style={{fontSize:EStyleSheet.value("15rem")}}>{content}</Text>
-                                                    </View>
+                                                    </TouchableOpacity>
                                                 )
                                             })
                                         }
