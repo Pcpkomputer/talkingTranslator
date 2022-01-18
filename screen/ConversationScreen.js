@@ -1,4 +1,4 @@
-import React, {useState, useRef, useEffect} from 'react';
+import React, {useState, useRef, useEffect, useContext} from 'react';
 import { StyleSheet, Text, View, Dimensions,TouchableOpacity, TextInput, BackHandler, Pressable, useWindowDimensions, ScrollView, ActivityIndicator } from 'react-native';
 import EStyleSheet from 'react-native-extended-stylesheet';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -12,6 +12,7 @@ import Mic from '../svg/Mic';
 import Question from '../svg/Question';
 import Mic2 from '../svg/Mic2';
 
+import {GlobalContext} from '../App';
 
 
 let shadow = {
@@ -27,6 +28,8 @@ let shadow = {
 }
 
 export default function ConversationScreen(props) {
+
+    let globalContext = useContext(GlobalContext);
 
     let [offset,setOffset] = useState(0);
     
@@ -696,7 +699,14 @@ export default function ConversationScreen(props) {
             <View style={{height:StatusBarHeight}}></View>
             <View style={{height:EStyleSheet.value("60rem"),paddingHorizontal:EStyleSheet.value("20rem"),flexDirection:"row",justifyContent:"space-between",backgroundColor:"white"}}>
                 <View style={{flexDirection:"row",alignItems:"center"}}>
-                        <Feather name="arrow-left" style={{marginBottom:EStyleSheet.value("3rem")}} size={EStyleSheet.value("20rem")} color="black" />
+                         <TouchableOpacity
+                         activeOpacity={0.8}
+                         onPress={()=>{
+                             props.navigation.goBack();
+                         }}
+                         >
+                         <Feather name="arrow-left" style={{marginBottom:EStyleSheet.value("3rem")}} size={EStyleSheet.value("20rem")} color="black" />
+                         </TouchableOpacity>
                          <Text style={{fontSize:EStyleSheet.value("23rem"),marginLeft:EStyleSheet.value("10rem")}}>Conversation</Text>
                 </View>
                 <View style={{opacity:0}}>
@@ -708,7 +718,7 @@ export default function ConversationScreen(props) {
                         <View style={{...shadow,height:EStyleSheet.value("50rem"),flexDirection:"row",backgroundColor:"white"}}>
                             <View style={{flex:1,flexDirection:"row",justifyContent:"center",alignItems:"center",paddingHorizontal:EStyleSheet.value("20rem")}}>
                                 <View style={{flexDirection:"row",paddingHorizontal:EStyleSheet.value("20rem")}}>
-                                    <Text numberOfLines={1} style={{fontSize:EStyleSheet.value("15rem")}}>English</Text>
+                                    <Text numberOfLines={1} style={{fontSize:EStyleSheet.value("15rem")}}>{globalContext.from.language}</Text>
                                     <Feather style={{marginLeft:EStyleSheet.value("5rem")}} name="chevron-down" size={EStyleSheet.value("20rem")} color="black" />
                                 </View>
                             </View>
@@ -716,7 +726,11 @@ export default function ConversationScreen(props) {
                                 <TouchableOpacity
                                 activeOpacity={0.9} 
                                 onPress={()=>{
-                                    alert("123");
+                                    let oldFrom = {...globalContext.from};
+                                    let oldTo = {...globalContext.to};
+                
+                                    globalContext.setFrom(oldTo);
+                                    globalContext.setTo(oldFrom);
                                 }}
                                 style={{...shadow,position:"absolute",justifyContent:"center",alignItems:"center",backgroundColor:"white",borderRadius:999,bottom:EStyleSheet.value("-10rem"),right:EStyleSheet.value("-5rem"),width:EStyleSheet.value("75rem"),height:EStyleSheet.value("75rem")}}>
                                     <MaterialIcons name="swap-horiz" size={EStyleSheet.value("40rem")} color="black" />
@@ -724,7 +738,7 @@ export default function ConversationScreen(props) {
                             </View>
                             <View style={{flex:1,flexDirection:"row",justifyContent:"center",alignItems:"center",paddingHorizontal:EStyleSheet.value("20rem")}}>
                                 <View style={{flexDirection:"row",paddingHorizontal:EStyleSheet.value("20rem")}}>
-                                    <Text numberOfLines={1} style={{fontSize:EStyleSheet.value("15rem")}}>Indonesia</Text>
+                                    <Text numberOfLines={1} style={{fontSize:EStyleSheet.value("15rem")}}>{globalContext.to.language}</Text>
                                     <Feather style={{marginLeft:EStyleSheet.value("5rem")}} name="chevron-down" size={EStyleSheet.value("20rem")} color="black" />
                                 </View>
                             </View>
