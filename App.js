@@ -65,12 +65,14 @@ export default function App() {
       // loading its initial state and rendering its first pixels. So instead,
       // we hide the splash screen once we know the root view has already
       // performed layout.
-      await SplashScreen.hideAsync();
+      setTimeout(() => {
+        await SplashScreen.hideAsync();
+      }, 1000);
     }
   }, [appIsReady]);
 
   if (!appIsReady) {
-    return <View style={{flex:1,backgroundColor:"red"}}></View>
+    return null;
   }
  else{
   return (
