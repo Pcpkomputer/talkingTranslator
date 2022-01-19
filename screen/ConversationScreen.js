@@ -1,16 +1,23 @@
 import React, {useState, useRef, useEffect, useContext} from 'react';
-import { StyleSheet, Text, View, Dimensions,TouchableOpacity, TextInput, BackHandler, Pressable, useWindowDimensions, ScrollView, ActivityIndicator } from 'react-native';
+import { StyleSheet, Text, View, Dimensions,TouchableOpacity, TextInput, BackHandler, Pressable, useWindowDimensions, ToastAndroid, ScrollView, ActivityIndicator } from 'react-native';
 import EStyleSheet from 'react-native-extended-stylesheet';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialIcons, Feather, FontAwesome5, AntDesign } from '@expo/vector-icons'; 
 
+import * as Clipboard from 'expo-clipboard';
+
+import * as Speech from 'expo-speech';
+
 import { StatusBarHeight } from '../utils/HeightUtils';
+import RBSheet from "react-native-raw-bottom-sheet";
 
 import MenuBurger from '../svg/MenuBurger';
 import Keyboard from '../svg/Keyboard';
 import Mic from '../svg/Mic';
 import Question from '../svg/Question';
 import Mic2 from '../svg/Mic2';
+
+import country from '../utils/country';
 
 import {GlobalContext} from '../App';
 
@@ -28,6 +35,8 @@ let shadow = {
 }
 
 export default function ConversationScreen(props) {
+
+  
 
     let globalContext = useContext(GlobalContext);
 
@@ -661,6 +670,8 @@ export default function ConversationScreen(props) {
 
     let height = useWindowDimensions().height;
 
+    
+
     let [selectedCategory,setSelectedCategory] = useState(-1);
     let [selectedBox, setSelectedBox] = useState(-1);
 
@@ -691,6 +702,28 @@ export default function ConversationScreen(props) {
     
         return () => backHandler.remove();
       }, [conversationStep,selectedCategory,selectedBox]);
+
+      let translateFrom = async(text)=>{
+
+        let request = await fetch(`https://language-translator-mediatech.herokuapp.com/translate`,{
+            method:"POST",
+            headers:{
+              "content-type":"application/json",
+            },
+            body:JSON.stringify({
+              "text": text,
+              "from": globalContext.from.code,
+              "to": globalContext.to.code,
+            })
+          });
+          let response = await request.json();
+          return response;
+     }
+    
+     const modalFromLang = useRef();
+     const modalToLang = useRef();
+     let [modalFromLangOpened, setModalFromLangOpened] = useState(false);
+     let [modalToLangOpened, setModalToLangOpened] = useState(false);
    
     if(conversationStep===0){
 
@@ -717,10 +750,18 @@ export default function ConversationScreen(props) {
                  <View style={{marginTop:EStyleSheet.value("50rem"),marginBottom:EStyleSheet.value("40rem")}}>
                         <View style={{...shadow,height:EStyleSheet.value("50rem"),flexDirection:"row",backgroundColor:"white"}}>
                             <View style={{flex:1,flexDirection:"row",justifyContent:"center",alignItems:"center",paddingHorizontal:EStyleSheet.value("20rem")}}>
-                                <View style={{flexDirection:"row",paddingHorizontal:EStyleSheet.value("20rem")}}>
+                                <TouchableOpacity 
+                                activeOpacity={0.8}
+                                onPress={()=>{
+                                    modalFromLang.current.open();
+                                    setTimeout(() => {
+                                    setModalFromLangOpened(true);
+                                    }, 250);
+                                }}
+                                style={{flexDirection:"row",paddingHorizontal:EStyleSheet.value("20rem")}}>
                                     <Text numberOfLines={1} style={{fontSize:EStyleSheet.value("15rem")}}>{globalContext.from.language}</Text>
                                     <Feather style={{marginLeft:EStyleSheet.value("5rem")}} name="chevron-down" size={EStyleSheet.value("20rem")} color="black" />
-                                </View>
+                                </TouchableOpacity>
                             </View>
                             <View style={{width:EStyleSheet.value("70rem")}}>
                                 <TouchableOpacity
@@ -737,10 +778,18 @@ export default function ConversationScreen(props) {
                                 </TouchableOpacity>
                             </View>
                             <View style={{flex:1,flexDirection:"row",justifyContent:"center",alignItems:"center",paddingHorizontal:EStyleSheet.value("20rem")}}>
-                                <View style={{flexDirection:"row",paddingHorizontal:EStyleSheet.value("20rem")}}>
+                                <TouchableOpacity 
+                                activeOpacity={0.8}
+                                onPress={()=>{
+                                    modalToLang.current.open();
+                                    setTimeout(() => {
+                                    setModalToLangOpened(true);
+                                    }, 250);
+                                }}
+                                style={{flexDirection:"row",paddingHorizontal:EStyleSheet.value("20rem")}}>
                                     <Text numberOfLines={1} style={{fontSize:EStyleSheet.value("15rem")}}>{globalContext.to.language}</Text>
                                     <Feather style={{marginLeft:EStyleSheet.value("5rem")}} name="chevron-down" size={EStyleSheet.value("20rem")} color="black" />
-                                </View>
+                                </TouchableOpacity>
                             </View>
                         </View>
                  </View>
@@ -764,6 +813,112 @@ export default function ConversationScreen(props) {
                     </ScrollView>
                 </View>
             </View>
+
+
+            <RBSheet
+        ref={(ref)=>{
+            modalFromLang.current=ref;
+        }}
+        closeOnDragDown={true}
+        dragFromTopOnly={true}
+        closeOnPressMask={true}
+        openDuration={250}
+        onClose={()=>{
+            setModalFromLangOpened(false);
+        }}
+        customStyles={{
+          wrapper: {
+            backgroundColor: "rgba(0,0,0,0.2)"
+          },
+          draggableIcon: {
+          }
+        }}
+      >
+          <ScrollView contentContainerStyle={{flex:(modalFromLangOpened) ? null:1}}>
+              <View style={{flex:1}}>
+                {
+                    (modalFromLangOpened) &&
+                    
+                        (country).map((item,index)=>{
+                            return (
+                              <Pressable 
+                              onPress={()=>{
+                                  globalContext.setFrom(item);
+                                  modalFromLang.current.close();
+                              }}
+                              android_ripple={{
+                                  color:"#e8e8e8"
+                              }}
+                              style={{justifyContent:"center",alignItems:"center",paddingHorizontal:EStyleSheet.value("20rem"),paddingVertical:EStyleSheet.value("20rem")}}>
+                                  <Text style={{fontSize:EStyleSheet.value("16rem")}}>{item.language}</Text>
+                              </Pressable> 
+                            )
+                        })                        
+                    
+                }
+                {
+                    (!modalFromLangOpened) &&
+                    <View style={{flex:1,justifyContent:"center",alignItems:"center"}}>
+                            <ActivityIndicator color="#ef3136" size="large"/>
+                        </View>
+                }
+              </View>
+          </ScrollView>
+      </RBSheet>
+
+
+      <RBSheet
+        ref={modalToLang}
+        closeOnDragDown={true}
+        dragFromTopOnly={true}
+        closeOnPressMask={true}
+        openDuration={250}
+        onClose={()=>{
+            setModalToLangOpened(false);
+        }}
+        customStyles={{
+          wrapper: {
+            backgroundColor: "rgba(0,0,0,0.2)"
+          },
+          draggableIcon: {
+          }
+        }}
+      >
+          <ScrollView contentContainerStyle={{flex:(modalToLangOpened) ? null:1}}>
+              <View style={{flex:1}}>
+                {
+                    (modalToLangOpened) &&
+                        (country).map((item,index)=>{
+                            return (
+                              <Pressable 
+                              onPress={()=>{
+                                globalContext.setTo(item);
+                                modalToLang.current.close();
+                              }}
+                              android_ripple={{
+                                  color:"#e8e8e8"
+                              }}
+                              style={{justifyContent:"center",alignItems:"center",paddingHorizontal:EStyleSheet.value("20rem"),paddingVertical:EStyleSheet.value("20rem")}}>
+                                  <Text style={{fontSize:EStyleSheet.value("16rem")}}>{item.language}</Text>
+                              </Pressable> 
+                            )
+                        })
+                        
+                       
+                    
+                }
+                {
+                    (!modalToLangOpened) &&
+                    <View style={{flex:1,justifyContent:"center",alignItems:"center"}}>
+                        <ActivityIndicator color="#ef3136" size="large"/>
+                    </View>
+                }
+              </View>
+          </ScrollView>
+      </RBSheet>
+
+
+
         </View>
         )
     }
@@ -820,28 +975,48 @@ export default function ConversationScreen(props) {
             </View>
             <View style={{flex:1,backgroundColor:"#f4f5f9"}}>
                  <View style={{marginTop:EStyleSheet.value("50rem"),marginBottom:EStyleSheet.value("40rem")}}>
-                        <View style={{...shadow,height:EStyleSheet.value("50rem"),flexDirection:"row",backgroundColor:"white"}}>
+                 <View style={{...shadow,height:EStyleSheet.value("50rem"),flexDirection:"row",backgroundColor:"white"}}>
                             <View style={{flex:1,flexDirection:"row",justifyContent:"center",alignItems:"center",paddingHorizontal:EStyleSheet.value("20rem")}}>
-                                <View style={{flexDirection:"row",paddingHorizontal:EStyleSheet.value("20rem")}}>
-                                    <Text numberOfLines={1} style={{fontSize:EStyleSheet.value("15rem")}}>English</Text>
+                                <TouchableOpacity 
+                                activeOpacity={0.8}
+                                onPress={()=>{
+                                    modalFromLang.current.open();
+                                    setTimeout(() => {
+                                    setModalFromLangOpened(true);
+                                    }, 250);
+                                }}
+                                style={{flexDirection:"row",paddingHorizontal:EStyleSheet.value("20rem")}}>
+                                    <Text numberOfLines={1} style={{fontSize:EStyleSheet.value("15rem")}}>{globalContext.from.language}</Text>
                                     <Feather style={{marginLeft:EStyleSheet.value("5rem")}} name="chevron-down" size={EStyleSheet.value("20rem")} color="black" />
-                                </View>
+                                </TouchableOpacity>
                             </View>
                             <View style={{width:EStyleSheet.value("70rem")}}>
                                 <TouchableOpacity
                                 activeOpacity={0.9} 
                                 onPress={()=>{
-                                  console.log(capturedOffset);
+                                    let oldFrom = {...globalContext.from};
+                                    let oldTo = {...globalContext.to};
+                
+                                    globalContext.setFrom(oldTo);
+                                    globalContext.setTo(oldFrom);
                                 }}
                                 style={{...shadow,position:"absolute",justifyContent:"center",alignItems:"center",backgroundColor:"white",borderRadius:999,bottom:EStyleSheet.value("-10rem"),right:EStyleSheet.value("-5rem"),width:EStyleSheet.value("75rem"),height:EStyleSheet.value("75rem")}}>
                                     <MaterialIcons name="swap-horiz" size={EStyleSheet.value("40rem")} color="black" />
                                 </TouchableOpacity>
                             </View>
                             <View style={{flex:1,flexDirection:"row",justifyContent:"center",alignItems:"center",paddingHorizontal:EStyleSheet.value("20rem")}}>
-                                <View style={{flexDirection:"row",paddingHorizontal:EStyleSheet.value("20rem")}}>
-                                    <Text numberOfLines={1} style={{fontSize:EStyleSheet.value("15rem")}}>Indonesia</Text>
+                                <TouchableOpacity 
+                                activeOpacity={0.8}
+                                onPress={()=>{
+                                    modalToLang.current.open();
+                                    setTimeout(() => {
+                                    setModalToLangOpened(true);
+                                    }, 250);
+                                }}
+                                style={{flexDirection:"row",paddingHorizontal:EStyleSheet.value("20rem")}}>
+                                    <Text numberOfLines={1} style={{fontSize:EStyleSheet.value("15rem")}}>{globalContext.to.language}</Text>
                                     <Feather style={{marginLeft:EStyleSheet.value("5rem")}} name="chevron-down" size={EStyleSheet.value("20rem")} color="black" />
-                                </View>
+                                </TouchableOpacity>
                             </View>
                         </View>
                  </View>
@@ -935,11 +1110,47 @@ export default function ConversationScreen(props) {
                                                                  colors={['#ef3136', '#ffb040']}
                                                                  end={{ x: 1, y: 0.6 }}
                                                                 style={{width:EStyleSheet.value("40rem"),justifyContent:"center",alignItems:"center",backgroundColor:"red",borderRadius:999,height:EStyleSheet.value("40rem")}}>
+                                                                    <TouchableOpacity 
+                                                                    activeOpacity={0.6}
+                                                                    onPress={async ()=>{
+                                                                        await Speech.speak(placeholderText,{
+                                                                            language:globalContext.from.code
+                                                                        });
+                                                                    }}
+                                                                    style={{width:"100%",height:"100%",justifyContent:"center",alignItems:"center"}}>
                                                                     <AntDesign name="sound" size={EStyleSheet.value("18rem")} color="white" />
+                                                                    </TouchableOpacity>
                                                                 </LinearGradient>
                                                                 <View style={{flexDirection:"row"}}>
-                                                                    <Feather name="copy" size={EStyleSheet.value("18rem")} color="black" />
-                                                                    <AntDesign style={{marginLeft:EStyleSheet.value("10rem")}} name="sharealt" size={EStyleSheet.value("18rem")} color="black" />
+                                                                        <TouchableOpacity
+                                                                        activeOpacity={0.5}
+                                                                        onPress={()=>{
+                                                                            Clipboard.setString(placeholderText);
+                                                                            ToastAndroid.show("Success copy to clipboard",500);
+                                                                        }}
+                                                                        >
+                                                                            <Feather name="copy" size={EStyleSheet.value("18rem")} color="black" />
+                                                                        </TouchableOpacity>
+                                                                        <TouchableOpacity
+                                                                        activeOpacity={0.5}
+                                                                        onPress={async ()=>{
+                                                                            const res = await Share.share({
+                                                                                message:
+                                                                                `${placeholderText}`,
+                                                                            });
+                                                                            if (res.action === Share.sharedAction) {
+                                                                                if (res.activityType) {
+                                                                                // shared with activity type of result.activityType
+                                                                                } else {
+                                                                                // shared
+                                                                                }
+                                                                            } else if (res.action === Share.dismissedAction) {
+                                                                                // dismissed
+                                                                            }
+                                                                        }}
+                                                                        >
+                                                                        <AntDesign style={{marginLeft:EStyleSheet.value("10rem")}} name="sharealt" size={EStyleSheet.value("18rem")} color="black" />
+                                                                        </TouchableOpacity>
                                                                 </View>
                                                             </View>
                                                         </View>
@@ -954,11 +1165,16 @@ export default function ConversationScreen(props) {
                                                         setPlaceholderText("");
                                                         setSelectedCategory(index);
                                                         setSelectedBox(contentindex);
+
+                                                        let t = conversation[selectedConversation].categories[index].content[contentindex];
                                                         
-                                                        setTimeout(() => {
-                                                            setBoxLoading(false);
-                                                            setPlaceholderText("Bisakah saya mendapatkan tanda terima?")
-                                                        }, 1000);
+                                                        let res = await translateFrom(t);
+
+
+                                                        setBoxLoading(false);
+                                                        setPlaceholderText(res.result);
+
+                                                  
                                                     }}
                                                     style={{...shadow,marginBottom:EStyleSheet.value("15rem"),backgroundColor:"white",borderRadius:EStyleSheet.value("5rem"),paddingVertical:EStyleSheet.value("15rem"),paddingHorizontal:EStyleSheet.value("20rem"),marginHorizontal:EStyleSheet.value("20rem")}}>
                                                         <Text style={{fontSize:EStyleSheet.value("15rem")}}>{content}</Text>
@@ -975,6 +1191,110 @@ export default function ConversationScreen(props) {
                     </ScrollView>
                 </View>
             </View>
+
+            <RBSheet
+        ref={(ref)=>{
+            modalFromLang.current=ref;
+        }}
+        closeOnDragDown={true}
+        dragFromTopOnly={true}
+        closeOnPressMask={true}
+        openDuration={250}
+        onClose={()=>{
+            setModalFromLangOpened(false);
+        }}
+        customStyles={{
+          wrapper: {
+            backgroundColor: "rgba(0,0,0,0.2)"
+          },
+          draggableIcon: {
+          }
+        }}
+      >
+          <ScrollView contentContainerStyle={{flex:(modalFromLangOpened) ? null:1}}>
+              <View style={{flex:1}}>
+                {
+                    (modalFromLangOpened) &&
+                    
+                        (country).map((item,index)=>{
+                            return (
+                              <Pressable 
+                              onPress={()=>{
+                                  globalContext.setFrom(item);
+                                  modalFromLang.current.close();
+                              }}
+                              android_ripple={{
+                                  color:"#e8e8e8"
+                              }}
+                              style={{justifyContent:"center",alignItems:"center",paddingHorizontal:EStyleSheet.value("20rem"),paddingVertical:EStyleSheet.value("20rem")}}>
+                                  <Text style={{fontSize:EStyleSheet.value("16rem")}}>{item.language}</Text>
+                              </Pressable> 
+                            )
+                        })                        
+                    
+                }
+                {
+                    (!modalFromLangOpened) &&
+                    <View style={{flex:1,justifyContent:"center",alignItems:"center"}}>
+                            <ActivityIndicator color="#ef3136" size="large"/>
+                        </View>
+                }
+              </View>
+          </ScrollView>
+      </RBSheet>
+
+
+      <RBSheet
+        ref={modalToLang}
+        closeOnDragDown={true}
+        dragFromTopOnly={true}
+        closeOnPressMask={true}
+        openDuration={250}
+        onClose={()=>{
+            setModalToLangOpened(false);
+        }}
+        customStyles={{
+          wrapper: {
+            backgroundColor: "rgba(0,0,0,0.2)"
+          },
+          draggableIcon: {
+          }
+        }}
+      >
+          <ScrollView contentContainerStyle={{flex:(modalToLangOpened) ? null:1}}>
+              <View style={{flex:1}}>
+                {
+                    (modalToLangOpened) &&
+                        (country).map((item,index)=>{
+                            return (
+                              <Pressable 
+                              onPress={()=>{
+                                globalContext.setTo(item);
+                                modalToLang.current.close();
+                              }}
+                              android_ripple={{
+                                  color:"#e8e8e8"
+                              }}
+                              style={{justifyContent:"center",alignItems:"center",paddingHorizontal:EStyleSheet.value("20rem"),paddingVertical:EStyleSheet.value("20rem")}}>
+                                  <Text style={{fontSize:EStyleSheet.value("16rem")}}>{item.language}</Text>
+                              </Pressable> 
+                            )
+                        })
+                        
+                       
+                    
+                }
+                {
+                    (!modalToLangOpened) &&
+                    <View style={{flex:1,justifyContent:"center",alignItems:"center"}}>
+                        <ActivityIndicator color="#ef3136" size="large"/>
+                    </View>
+                }
+              </View>
+          </ScrollView>
+      </RBSheet>
+
+
         </View>
     )
     }

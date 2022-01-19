@@ -1,12 +1,21 @@
 import React, {useState,useEffect, useRef, useContext} from 'react';
-import { StyleSheet, Text, View, Dimensions,TouchableOpacity, TextInput, Image, useWindowDimensions, Pressable, ScrollView, ActivityIndicator, Touchable, ToastAndroid } from 'react-native';
+import { StyleSheet, Text, View, Dimensions,TouchableOpacity, TextInput, Image, useWindowDimensions, Share, Pressable, ScrollView, ActivityIndicator, Touchable, ToastAndroid } from 'react-native';
 import EStyleSheet from 'react-native-extended-stylesheet';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialIcons, Feather, FontAwesome5, AntDesign } from '@expo/vector-icons'; 
 
+import * as Speech from 'expo-speech';
+
 import RBSheet from "react-native-raw-bottom-sheet";
 
 import { StatusBarHeight } from '../utils/HeightUtils';
+
+import { useIsFocused } from '@react-navigation/native';
+
+import Voice from '@react-native-voice/voice';
+
+import * as Clipboard from 'expo-clipboard';
+
 
 import MenuBurger from '../svg/MenuBurger';
 import Keyboard from '../svg/Keyboard';
@@ -31,6 +40,8 @@ let shadow = {
 
 export default function TranslateScreen(props) {
 
+    let focused = useIsFocused();
+
     let triggerTextInput = useRef();
     let topTextInput = useRef();
 
@@ -47,6 +58,51 @@ export default function TranslateScreen(props) {
     let height = useWindowDimensions().height;
 
     let [micLoading, setMicLoading] = useState(false);
+
+
+    let translateFrom = async(text)=>{
+
+    let request = await fetch(`https://language-translator-mediatech.herokuapp.com/translate`,{
+        method:"POST",
+        headers:{
+          "content-type":"application/json",
+        },
+        body:JSON.stringify({
+          "text": text,
+          "from": globalContext.from.code,
+          "to": globalContext.to.code,
+        })
+      });
+      let response = await request.json();
+      return response;
+ }
+
+
+    useEffect(()=>{
+       if(focused){
+        setMicLoading(false);
+
+        Voice.destroy().then(Voice.removeAllListeners);
+        if(focused){
+          Voice.onSpeechStart = ()=>{
+            console.log("speech start");
+          }
+          Voice.onSpeechEnd = ()=>{
+            console.log("speech end");
+            setMicLoading(false);
+            // setLeftMicIsOn(false);
+            // setRightMicIsOn(false);
+          }
+          Voice.onSpeechResults = (event)=>{
+            let text = event.value[0];
+            setMicLoading(false);
+            setText(text);
+
+            
+          }
+        }
+       }
+      },[focused]);
 
     
 
@@ -126,7 +182,16 @@ export default function TranslateScreen(props) {
                                 colors={['#ef3136', '#ffb040']}
                                 end={{ x: 1, y: 0.6 }}
                                 style={{position:"absolute",justifyContent:"center",alignItems:"center",backgroundColor:"red",bottom:0,borderRadius:999,left:EStyleSheet.value("20rem"),bottom:EStyleSheet.value("20rem"),width:EStyleSheet.value("40rem"),height:EStyleSheet.value("40rem")}}>
-                                    <AntDesign name="sound" size={EStyleSheet.value("18rem")} color="white" />
+                                    <TouchableOpacity 
+                                    activeOpacity={0.8}
+                                    onPress={async ()=>{
+                                        await Speech.speak(text,{
+                                            language:globalContext.from.code
+                                        });
+                                    }}
+                                    style={{width:"100%",height:"100%",justifyContent:"center",alignItems:"center"}}>
+                                        <AntDesign name="sound" size={EStyleSheet.value("18rem")} color="white" />
+                                    </TouchableOpacity>
                                 </LinearGradient>
                                 :
                                 <LinearGradient 
@@ -134,7 +199,7 @@ export default function TranslateScreen(props) {
                                 end={{ x: 1, y: 0.6 }}
                                 style={{position:"absolute",justifyContent:"center",alignItems:"center",backgroundColor:"red",bottom:0,borderRadius:EStyleSheet.value("10rem"),left:EStyleSheet.value("20rem"),paddingHorizontal:EStyleSheet.value("10rem"),bottom:EStyleSheet.value("20rem"),height:EStyleSheet.value("40rem")}}>
                                     <TouchableOpacity
-                                    onPress={()=>{
+                                    onPress={async ()=>{
                                         if(text.length===0){
                                             ToastAndroid.show("Please fill the input",500);
                                         }
@@ -143,10 +208,14 @@ export default function TranslateScreen(props) {
                                             setResult("");
                                             setResultDone(true);
     
-                                            setTimeout(() => {
-                                                setResult("Halo");
-                                                setResultLoading(false);
-                                            }, 1000);
+                                            // setTimeout(() => {
+                                            //     setResult("Halo");
+                                            //     setResultLoading(false);
+                                            // }, 1000);
+
+                                            let result = await translateFrom(text);
+                                            setResult(result.result);
+                                            setResultLoading(false);
                                         }
                                     }}
                                     >
@@ -179,12 +248,48 @@ export default function TranslateScreen(props) {
                              colors={['#ef3136', '#ffb040']}
                              end={{ x: 1, y: 0.6 }}
                             style={{position:"absolute",justifyContent:"center",alignItems:"center",backgroundColor:"red",bottom:0,borderRadius:999,left:EStyleSheet.value("20rem"),bottom:EStyleSheet.value("20rem"),width:EStyleSheet.value("40rem"),height:EStyleSheet.value("40rem")}}>
+                                  <TouchableOpacity 
+                                    activeOpacity={0.8}
+                                    onPress={async ()=>{
+                                        await Speech.speak(result,{
+                                            language:globalContext.to.code
+                                        });
+                                    }}
+                                    style={{width:"100%",height:"100%",justifyContent:"center",alignItems:"center"}}>
                                 <AntDesign name="sound" size={EStyleSheet.value("18rem")} color="white" />
+                                </TouchableOpacity>
                             </LinearGradient>
 
                             <View style={{flexDirection:"row",position:"absolute",right:EStyleSheet.value("25rem"),bottom:EStyleSheet.value("25rem")}}>
-                                <Feather name="copy" size={EStyleSheet.value("18rem")} color="black" />
+                                <TouchableOpacity
+                                activeOpacity={0.5}
+                                onPress={()=>{
+                                    Clipboard.setString(result);
+                                    ToastAndroid.show("Success copy to clipboard",500);
+                                }}
+                                >
+                                    <Feather name="copy" size={EStyleSheet.value("18rem")} color="black" />
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                activeOpacity={0.5}
+                                onPress={async ()=>{
+                                    const res = await Share.share({
+                                        message:
+                                          `${result}`,
+                                      });
+                                      if (res.action === Share.sharedAction) {
+                                        if (res.activityType) {
+                                          // shared with activity type of result.activityType
+                                        } else {
+                                          // shared
+                                        }
+                                      } else if (res.action === Share.dismissedAction) {
+                                        // dismissed
+                                      }
+                                }}
+                                >
                                 <AntDesign style={{marginLeft:EStyleSheet.value("10rem")}} name="sharealt" size={EStyleSheet.value("18rem")} color="black" />
+                                </TouchableOpacity>
                             </View>
                              
                         </View>
@@ -220,7 +325,7 @@ export default function TranslateScreen(props) {
                               style={{position:"absolute",justifyContent:"center",alignItems:"center",borderRadius:999,bottom:EStyleSheet.value("35rem"),width:EStyleSheet.value("80rem"),height:EStyleSheet.value("80rem"),backgroundColor:"red",right:EStyleSheet.value("-40rem")}}>
                                   <Mic/>
                                   <Pressable 
-                                  onPress={()=>{
+                                  onPress={async ()=>{
                                       setText("");
                                       setResultLoading(true);
                                       setResult("");
@@ -228,9 +333,15 @@ export default function TranslateScreen(props) {
                                       
                                       setMicLoading(true);
 
-                                      setTimeout(() => {
-                                            setMicLoading(false);
-                                      }, 1000);
+                                      let avail = await Voice.isAvailable();
+                                
+                                      if(avail){
+                                            Voice.start(`${globalContext.from.code}`); 
+                                        
+                                      }
+                                      else{
+                                          ToastAndroid.show("Voice recognition is not supported in this device",500);
+                                      }
                                   }}
                                   style={{width:EStyleSheet.value("80rem"),height:EStyleSheet.value("80rem"),position:"absolute"}}>
                                   </Pressable>

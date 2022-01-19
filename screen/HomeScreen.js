@@ -1,8 +1,12 @@
 import React, {useRef, useState, useEffect, useContext} from 'react';
-import { StyleSheet, Text, View, Dimensions,TouchableOpacity,ActivityIndicator,ScrollView, TextInput, useWindowDimensions, Image, Pressable, Touchable } from 'react-native';
+import { StyleSheet, Text, View, Dimensions,TouchableOpacity,ActivityIndicator,ScrollView, TextInput, useWindowDimensions, Image, Pressable, Touchable, ToastAndroid } from 'react-native';
 import EStyleSheet from 'react-native-extended-stylesheet';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialIcons, Feather, FontAwesome5, AntDesign } from '@expo/vector-icons'; 
+
+import { useIsFocused } from '@react-navigation/native';
+
+import Voice from '@react-native-voice/voice';
 
 import country from '../utils/country';
 
@@ -33,6 +37,13 @@ let shadow = {
 
 export default function HomeScreen(props) {
 
+    let [topTextInputLoading, setTopTextInputLoading] = useState(false);
+    let [bottomTextInputLoading, setBottomTextInputLoading] = useState(false);
+
+    let [mic,setMic] = useState("");
+
+    let focused = useIsFocused();
+
     let [focusedCursor, setFocusedCursor] = useState("bottom");
 
     let triggerTextInput = useRef();
@@ -59,6 +70,105 @@ export default function HomeScreen(props) {
 
     let [topText, setTopText] = useState("");
     let [bottomText, setBottomText] = useState("");
+
+    let [placeholderText, setPlaceholderText] = useState("");
+
+    useEffect(()=>{
+        if(focused){
+            setTopMicLoading(false);
+            setBottomMicLoading(false);
+            
+            Voice.destroy().then(Voice.removeAllListeners);
+            if(focused){
+              Voice.onSpeechStart = ()=>{
+                console.log("speech start");
+              }
+              Voice.onSpeechEnd = ()=>{
+                console.log("speech end");
+                setTopMicLoading(false);
+                setBottomMicLoading(false);
+                // setLeftMicIsOn(false);
+                // setRightMicIsOn(false);
+              }
+              Voice.onSpeechResults = (event)=>{
+                let text = event.value[0];
+    
+                setPlaceholderText(text);
+              }
+            }
+        }
+       
+      },[focused]);
+
+
+ let translateFrom = async()=>{
+
+    let request = await fetch(`https://language-translator-mediatech.herokuapp.com/translate`,{
+        method:"POST",
+        headers:{
+          "content-type":"application/json",
+        },
+        body:JSON.stringify({
+          "text": placeholderText,
+          "from": globalContext.from.code,
+          "to": globalContext.to.code,
+        })
+      });
+      let response = await request.json();
+      return response;
+ }
+
+
+
+ let translateTo = async()=>{
+
+    let request = await fetch(`https://language-translator-mediatech.herokuapp.com/translate`,{
+        method:"POST",
+        headers:{
+          "content-type":"application/json",
+        },
+        body:JSON.stringify({
+          "text": placeholderText,
+          "from": globalContext.to.code,
+          "to": globalContext.from.code,
+        })
+      });
+      let response = await request.json();
+      return response;
+ }
+
+
+  useEffect(()=>{
+    setTimeout(() => {
+        if(mic==="bottom"){
+            setBottomText(placeholderText);
+            setBottomMicLoading(false);
+
+            setTopTextInputLoading(true);
+
+            translateFrom().then((res)=>{
+                setTopText(res.result);
+                setTopTextInputLoading(false);
+                setMic("");
+                setPlaceholderText("");
+            })
+  
+        }  
+        else if(mic==="top"){
+            setTopText(placeholderText);
+            setTopMicLoading(false);
+
+            setBottomTextInputLoading(true);
+
+            translateTo().then((res)=>{
+                setBottomText(res.result);
+                setBottomTextInputLoading(false);
+                setMic("");
+                setPlaceholderText("");
+            })
+        }
+    }, 1000);
+  },[placeholderText])
 
 
   return (
@@ -93,12 +203,29 @@ export default function HomeScreen(props) {
                       style={{position:"absolute",transform:[{rotate:"180deg"}],justifyContent:"center",alignItems:"center",borderRadius:999,bottom:EStyleSheet.value("-30rem"),width:EStyleSheet.value("80rem"),height:EStyleSheet.value("80rem"),backgroundColor:"red",right:EStyleSheet.value("-40rem")}}>
                           <Mic2/>
                           <Pressable 
-                          onPress={()=>{
-                                setTopMicLoading(true);
+                          onPress={async ()=>{
+
+                                let avail = await Voice.isAvailable();
                                 
-                                setTimeout(() => {
-                                    setTopMicLoading(false);
-                                }, 1000);
+                                if(avail){
+                                    let preload = function(){
+                                        return new Promise((resolve,reject)=>{
+                                            setTopMicLoading(true);
+                                            setMic("top");
+                                            resolve();
+                                        })
+                                    }
+
+                                    preload().then(()=>{
+                                        Voice.start(`${globalContext.to.code}`); 
+                                    });
+                                }
+                                else{
+                                    ToastAndroid.show("Voice recognition is not supported in this device",500);
+                                }
+
+                                      
+                            
                           }}
                           style={{width:EStyleSheet.value("80rem"),height:EStyleSheet.value("80rem"),position:"absolute"}}>
                           </Pressable>
@@ -110,17 +237,24 @@ export default function HomeScreen(props) {
                 </View>
             </View>
             <View style={{flex:1,justifyContent:"center",transform:[{rotate:"180deg"}],paddingVertical:EStyleSheet.value("40rem"),paddingHorizontal:EStyleSheet.value("50rem"),alignItems:"center"}}>
-                <TextInput 
-                ref={(ref)=>{
-                    topTextInput = ref;
-                }}
-                onFocus={()=>{
-                    setFocusedCursor("top");
-                }}
-                onChangeText={(text)=>{
-                    setTopText(text);
-                }}
-                showSoftInputOnFocus={false} placeholder="Press to speak" value={topText} multiline={true} style={{fontSize:EStyleSheet.value("30rem"),color:"white"}}/>
+                {
+                    (topTextInputLoading) ? 
+                    <View>
+                        <ActivityIndicator size="large" color="white"/>
+                    </View>
+                    :
+                    <TextInput 
+                    ref={(ref)=>{
+                        topTextInput = ref;
+                    }}
+                    onFocus={()=>{
+                        setFocusedCursor("top");
+                    }}
+                    onChangeText={(text)=>{
+                        setTopText(text);
+                    }}
+                    showSoftInputOnFocus={false} placeholder="Press to speak" value={topText} multiline={true} style={{fontSize:EStyleSheet.value("30rem"),color:"white"}}/>
+                }
             </View>
         </LinearGradient>
         <View style={{...shadow,height:EStyleSheet.value("60rem"),flexDirection:"row",backgroundColor:"white"}}>
@@ -169,18 +303,26 @@ export default function HomeScreen(props) {
         </View>
         <View style={{flex:1,backgroundColor:"#f4f5f9"}}>
             <View style={{flex:1,justifyContent:"center",paddingVertical:EStyleSheet.value("40rem"),paddingHorizontal:EStyleSheet.value("50rem"),alignItems:"center"}}>
-                <TextInput 
-                ref={(ref)=>{
-                    bottomTextInput = ref;
-                }}
-                onFocus={()=>{
-                    setFocusedCursor("bottom");
-                }}
-                onChangeText={(text)=>{
-                    setBottomText(text);
-                }}
-                showSoftInputOnFocus={false} placeholder="Press to speak" value={bottomText} multiline={true} style={{fontSize:EStyleSheet.value("30rem")}}/>
-            </View>
+                {
+                    (bottomTextInputLoading) ?
+                    <View>
+                        <ActivityIndicator size="large" color="black"/>
+                    </View>
+                    :
+                    <TextInput 
+                    ref={(ref)=>{
+                        bottomTextInput = ref;
+                    }}
+                    onFocus={()=>{
+                        setFocusedCursor("bottom");
+                    }}
+                    onChangeText={(text)=>{
+                        setBottomText(text);
+                    }}
+                    showSoftInputOnFocus={false} placeholder="Press to speak" value={bottomText} multiline={true} style={{fontSize:EStyleSheet.value("30rem")}}/>
+               
+                }
+               </View>
             <View style={{height:EStyleSheet.value("90rem"),flexDirection:"row",justifyContent:"space-between",paddingHorizontal:EStyleSheet.value("20rem")}}>
                 <TouchableOpacity
                 activeOpacity={0.8}
@@ -206,12 +348,26 @@ export default function HomeScreen(props) {
                        style={{position:"absolute",justifyContent:"center",alignItems:"center",borderRadius:999,bottom:EStyleSheet.value("35rem"),width:EStyleSheet.value("80rem"),height:EStyleSheet.value("80rem"),backgroundColor:"red",right:EStyleSheet.value("-40rem")}}>
                            <Mic/>
                            <Pressable 
-                           onPress={()=>{
-                                setBottomMicLoading(true);
-                                    
-                                setTimeout(() => {
-                                    setBottomMicLoading(false);
-                                }, 1000);
+                           onPress={async ()=>{
+                              
+                                let avail = await Voice.isAvailable();
+
+                                if(avail){
+                                    let preload = function(){
+                                        return new Promise((resolve,reject)=>{
+                                            setBottomMicLoading(true);
+                                            setMic("bottom");
+                                            resolve();
+                                        })
+                                    }
+    
+                                    preload().then(()=>{
+                                        Voice.start(`${globalContext.from.code}`); 
+                                    });
+                                }
+                                else{
+                                    ToastAndroid.show("Voice recognition is not supported in this device",500);
+                                }
                            }}
                            style={{width:EStyleSheet.value("80rem"),height:EStyleSheet.value("80rem"),position:"absolute"}}>
                            </Pressable>
