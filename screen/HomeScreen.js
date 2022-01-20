@@ -1,5 +1,5 @@
 import React, {useRef, useState, useEffect, useContext} from 'react';
-import { StyleSheet, Text, View, Dimensions,TouchableOpacity,ActivityIndicator,ScrollView, TextInput, useWindowDimensions, Image, Pressable, Touchable, ToastAndroid } from 'react-native';
+import { StyleSheet, Text, View, Dimensions,TouchableOpacity,ActivityIndicator,ScrollView, BackHandler, TextInput, useWindowDimensions, Image, Pressable, Touchable, ToastAndroid } from 'react-native';
 import EStyleSheet from 'react-native-extended-stylesheet';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialIcons, Feather, FontAwesome5, AntDesign } from '@expo/vector-icons'; 
@@ -99,6 +99,23 @@ export default function HomeScreen(props) {
         }
        
       },[focused]);
+
+
+      useEffect(() => {
+        const backAction = () => {
+            
+            BackHandler.exitApp();
+            return true;
+         
+        };
+    
+        const backHandler = BackHandler.addEventListener(
+          "hardwareBackPress",
+          backAction
+        );
+    
+        return () => backHandler.remove();
+      }, []);
 
 
  let translateFrom = async()=>{

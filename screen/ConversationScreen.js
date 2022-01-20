@@ -929,7 +929,14 @@ export default function ConversationScreen(props) {
             <View style={{height:StatusBarHeight}}></View>
             <View style={{height:EStyleSheet.value("60rem"),paddingHorizontal:EStyleSheet.value("20rem"),flexDirection:"row",justifyContent:"space-between",backgroundColor:"white"}}>
                 <View style={{flexDirection:"row",alignItems:"center"}}>
-                        <Feather name="arrow-left" style={{marginBottom:EStyleSheet.value("3rem")}} size={EStyleSheet.value("20rem")} color="black" />
+                         <TouchableOpacity
+                         activeOpacity={0.8}
+                         onPress={()=>{
+                             props.navigation.goBack();
+                         }}
+                         >
+                         <Feather name="arrow-left" style={{marginBottom:EStyleSheet.value("3rem")}} size={EStyleSheet.value("20rem")} color="black" />
+                         </TouchableOpacity>
                          <Text style={{fontSize:EStyleSheet.value("23rem"),marginLeft:EStyleSheet.value("10rem")}}>Conversation</Text>
                 </View>
                 <View style={{opacity:0}}>
