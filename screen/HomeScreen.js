@@ -102,20 +102,22 @@ export default function HomeScreen(props) {
 
 
       useEffect(() => {
-        const backAction = () => {
+        if(focused){
+            const backAction = () => {
             
-            BackHandler.exitApp();
-            return true;
-         
-        };
-    
-        const backHandler = BackHandler.addEventListener(
-          "hardwareBackPress",
-          backAction
-        );
-    
-        return () => backHandler.remove();
-      }, []);
+                BackHandler.exitApp();
+                return true;
+             
+            };
+        
+            const backHandler = BackHandler.addEventListener(
+              "hardwareBackPress",
+              backAction
+            );
+        
+            return () => backHandler.remove();
+        }
+      }, [focused]);
 
 
  let translateFrom = async()=>{

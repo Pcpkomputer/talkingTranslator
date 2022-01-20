@@ -4,6 +4,8 @@ import EStyleSheet from 'react-native-extended-stylesheet';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialIcons, Feather, FontAwesome5, AntDesign } from '@expo/vector-icons'; 
 
+import { useIsFocused } from '@react-navigation/native';
+
 import * as Clipboard from 'expo-clipboard';
 
 import * as Speech from 'expo-speech';
@@ -37,6 +39,7 @@ let shadow = {
 export default function ConversationScreen(props) {
 
   
+    let focused = useIsFocused();
 
     let globalContext = useContext(GlobalContext);
 
@@ -678,30 +681,32 @@ export default function ConversationScreen(props) {
     let [boxLoading, setBoxLoading] = useState(true);
 
     useEffect(() => {
-        const backAction = () => {
-          if(selectedCategory!==-1 && selectedBox!==-1){
-            setSelectedCategory(-1);
-            setSelectedBox(-1);
-            return true;
-          }
-          else if(conversationStep===1){
-              setConversationStep(0);
-              return true;
-          }
-          else{
-              props.navigation.goBack();
-              return true;
-          }
-         
-        };
-    
-        const backHandler = BackHandler.addEventListener(
-          "hardwareBackPress",
-          backAction
-        );
-    
-        return () => backHandler.remove();
-      }, [conversationStep,selectedCategory,selectedBox]);
+        if(focused){
+            const backAction = () => {
+                if(selectedCategory!==-1 && selectedBox!==-1){
+                  setSelectedCategory(-1);
+                  setSelectedBox(-1);
+                  return true;
+                }
+                else if(conversationStep===1){
+                    setConversationStep(0);
+                    return true;
+                }
+                else{
+                    props.navigation.goBack();
+                    return true;
+                }
+               
+              };
+          
+              const backHandler = BackHandler.addEventListener(
+                "hardwareBackPress",
+                backAction
+              );
+          
+              return () => backHandler.remove();
+        }
+      }, [conversationStep,selectedCategory,selectedBox,focused]);
 
       let translateFrom = async(text)=>{
 
