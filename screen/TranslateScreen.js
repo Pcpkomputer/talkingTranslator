@@ -25,6 +25,8 @@ import Mic2 from '../svg/Mic2';
 
 import {GlobalContext} from '../App';
 
+import country from '../utils/country';
+
 
 let shadow = {
     shadowColor: "#000",
@@ -104,6 +106,15 @@ export default function TranslateScreen(props) {
        }
       },[focused]);
 
+
+
+
+    const modalFromLang = useRef();
+    const modalToLang = useRef();
+    let [modalFromLangOpened, setModalFromLangOpened] = useState(false);
+    let [modalToLangOpened, setModalToLangOpened] = useState(false);
+
+
     
 
     return (
@@ -136,12 +147,20 @@ export default function TranslateScreen(props) {
             <View style={{flex:1,backgroundColor:"#f4f5f9"}}>
                  <View style={{marginTop:EStyleSheet.value("50rem"),marginBottom:EStyleSheet.value("40rem")}}>
                         <View style={{...shadow,height:EStyleSheet.value("50rem"),flexDirection:"row",backgroundColor:"white"}}>
-                            <View style={{flex:1,flexDirection:"row",justifyContent:"center",alignItems:"center",paddingHorizontal:EStyleSheet.value("20rem")}}>
+                            <TouchableOpacity 
+                            activeOpacity={0.8}
+                            onPress={()=>{
+                                modalFromLang.current.open();
+                                setTimeout(() => {
+                                setModalFromLangOpened(true);
+                                }, 250);
+                            }}
+                            style={{flex:1,flexDirection:"row",justifyContent:"center",alignItems:"center",paddingHorizontal:EStyleSheet.value("20rem")}}>
                                 <View style={{flexDirection:"row",paddingHorizontal:EStyleSheet.value("20rem")}}>
                                     <Text numberOfLines={1} style={{fontSize:EStyleSheet.value("15rem")}}>{globalContext.from.language}</Text>
                                     <Feather style={{marginLeft:EStyleSheet.value("5rem")}} name="chevron-down" size={EStyleSheet.value("20rem")} color="black" />
                                 </View>
-                            </View>
+                            </TouchableOpacity>
                             <View style={{width:EStyleSheet.value("70rem")}}>
                                 <TouchableOpacity
                                 activeOpacity={0.9} 
@@ -156,12 +175,20 @@ export default function TranslateScreen(props) {
                                     <MaterialIcons name="swap-horiz" size={EStyleSheet.value("40rem")} color="black" />
                                 </TouchableOpacity>
                             </View>
-                            <View style={{flex:1,flexDirection:"row",justifyContent:"center",alignItems:"center",paddingHorizontal:EStyleSheet.value("20rem")}}>
+                            <TouchableOpacity 
+                            activeOpacity={0.8}
+                            onPress={()=>{
+                                modalToLang.current.open();
+                                setTimeout(() => {
+                                setModalToLangOpened(true);
+                                }, 250);
+                            }}
+                             style={{flex:1,flexDirection:"row",justifyContent:"center",alignItems:"center",paddingHorizontal:EStyleSheet.value("20rem")}}>
                                 <View style={{flexDirection:"row",paddingHorizontal:EStyleSheet.value("20rem")}}>
                                     <Text numberOfLines={1} style={{fontSize:EStyleSheet.value("15rem")}}>{globalContext.to.language}</Text>
                                     <Feather style={{marginLeft:EStyleSheet.value("5rem")}} name="chevron-down" size={EStyleSheet.value("20rem")} color="black" />
                                 </View>
-                            </View>
+                            </TouchableOpacity>
                         </View>
                  </View>
                 <ScrollView contentContainerStyle={{paddingBottom:EStyleSheet.value("150rem")}}>
@@ -432,6 +459,108 @@ export default function TranslateScreen(props) {
               </View>
              
           </View>
+      </RBSheet>
+
+
+
+      <RBSheet
+        ref={modalFromLang}
+        closeOnDragDown={true}
+        dragFromTopOnly={true}
+        closeOnPressMask={true}
+        openDuration={250}
+        onClose={()=>{
+            setModalFromLangOpened(false);
+        }}
+        customStyles={{
+          wrapper: {
+            backgroundColor: "rgba(0,0,0,0.2)"
+          },
+          draggableIcon: {
+          }
+        }}
+      >
+          <ScrollView contentContainerStyle={{flex:(modalFromLangOpened) ? null:1}}>
+              <View style={{flex:1}}>
+                {
+                    (modalFromLangOpened) &&
+                    
+                        (country).map((item,index)=>{
+                            return (
+                              <Pressable 
+                              onPress={()=>{
+                                  globalContext.setFrom(item);
+                                  modalFromLang.current.close();
+                              }}
+                              android_ripple={{
+                                  color:"#e8e8e8"
+                              }}
+                              style={{justifyContent:"center",alignItems:"center",paddingHorizontal:EStyleSheet.value("20rem"),paddingVertical:EStyleSheet.value("20rem")}}>
+                                  <Text style={{fontSize:EStyleSheet.value("16rem")}}>{item.language}</Text>
+                              </Pressable> 
+                            )
+                        })                        
+                    
+                }
+                {
+                    (!modalFromLangOpened) &&
+                    <View style={{flex:1,justifyContent:"center",alignItems:"center"}}>
+                            <ActivityIndicator color="#ef3136" size="large"/>
+                        </View>
+                }
+              </View>
+          </ScrollView>
+      </RBSheet>
+
+
+      <RBSheet
+        ref={modalToLang}
+        closeOnDragDown={true}
+        dragFromTopOnly={true}
+        closeOnPressMask={true}
+        openDuration={250}
+        onClose={()=>{
+            setModalToLangOpened(false);
+        }}
+        customStyles={{
+          wrapper: {
+            backgroundColor: "rgba(0,0,0,0.2)"
+          },
+          draggableIcon: {
+          }
+        }}
+      >
+          <ScrollView contentContainerStyle={{flex:(modalToLangOpened) ? null:1}}>
+              <View style={{flex:1}}>
+                {
+                    (modalToLangOpened) &&
+                        (country).map((item,index)=>{
+                            return (
+                              <Pressable 
+                              onPress={()=>{
+                                globalContext.setTo(item);
+                                modalToLang.current.close();
+                              }}
+                              android_ripple={{
+                                  color:"#e8e8e8"
+                              }}
+                              style={{justifyContent:"center",alignItems:"center",paddingHorizontal:EStyleSheet.value("20rem"),paddingVertical:EStyleSheet.value("20rem")}}>
+                                  <Text style={{fontSize:EStyleSheet.value("16rem")}}>{item.language}</Text>
+                              </Pressable> 
+                            )
+                        })
+                        
+                       
+                    
+                }
+                {
+                    (!modalToLangOpened) &&
+                    <View style={{flex:1,justifyContent:"center",alignItems:"center"}}>
+                        <ActivityIndicator color="#ef3136" size="large"/>
+                    </View>
+                }
+              </View>
+          </ScrollView>
       </RBSheet>
 
         </View>
