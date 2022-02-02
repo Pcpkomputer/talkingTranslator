@@ -132,7 +132,7 @@ android {
     }
 
     defaultConfig {
-        applicationId "com.mediatechindo.talkingtranslator"
+        applicationId "com.mediatechindo.talking.translator.talkingtranslator"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
