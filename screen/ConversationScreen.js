@@ -13,6 +13,14 @@ import * as Speech from 'expo-speech';
 import { StatusBarHeight } from '../utils/HeightUtils';
 import RBSheet from "react-native-raw-bottom-sheet";
 
+import {
+    AdMobBanner,
+    AdMobInterstitial,
+    PublisherBanner,
+    AdMobRewarded,
+    setTestDeviceIDAsync,
+  } from 'expo-ads-admob';
+
 import MenuBurger from '../svg/MenuBurger';
 import Keyboard from '../svg/Keyboard';
 import Mic from '../svg/Mic';
@@ -707,6 +715,16 @@ export default function ConversationScreen(props) {
               return () => backHandler.remove();
         }
       }, [conversationStep,selectedCategory,selectedBox,focused]);
+
+      let showAds = async()=>{
+        await AdMobInterstitial.setAdUnitID('ca-app-pub-5944538170419621/3603788220'); 
+        await AdMobInterstitial.requestAdAsync({ servePersonalizedAds: false});
+        await AdMobInterstitial.showAdAsync();
+      }
+    
+      useEffect(()=>{
+        showAds();
+    },[focused]);
 
       let translateFrom = async(text)=>{
 

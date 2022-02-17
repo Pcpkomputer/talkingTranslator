@@ -12,6 +12,14 @@ import { StatusBarHeight } from '../utils/HeightUtils';
 
 import { useIsFocused } from '@react-navigation/native';
 
+import {
+    AdMobBanner,
+    AdMobInterstitial,
+    PublisherBanner,
+    AdMobRewarded,
+    setTestDeviceIDAsync,
+  } from 'expo-ads-admob';
+
 import Voice from '@react-native-voice/voice';
 
 import * as Clipboard from 'expo-clipboard';
@@ -106,7 +114,15 @@ export default function TranslateScreen(props) {
        }
       },[focused]);
 
-
+      let showAds = async()=>{
+        await AdMobInterstitial.setAdUnitID('ca-app-pub-5944538170419621/3603788220'); 
+        await AdMobInterstitial.requestAdAsync({ servePersonalizedAds: false});
+        await AdMobInterstitial.showAdAsync();
+      }
+    
+      useEffect(()=>{
+        showAds();
+    },[focused]);
 
 
     const modalFromLang = useRef();
